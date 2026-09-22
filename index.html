@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="זמני תפילה">
-<title>זמני מנחה וערבית — תשפ״ז</title>
+<title>זמני תפילה — עשהאל · תשפ״ז</title>
 <style>
   :root {
     --bg: #f4f1ea;
@@ -20,6 +20,7 @@
     --accent: #1e40af;
     --accent-soft: #dbeafe;
     --gold: #b45309;
+    --gold-soft: #fef3c7;
     --line: #e5e1d8;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -54,6 +55,7 @@
     padding: 22px 18px;
     box-shadow: 0 2px 10px rgba(0,0,0,.05);
   }
+  .card + .card { margin-top: 16px; }
   .parsha {
     text-align: center;
     font-size: 1.25rem;
@@ -81,6 +83,15 @@
   }
   .time-box .label { font-size: .95rem; color: var(--accent); font-weight: 600; }
   .time-box .value { font-size: 1.7rem; font-weight: 800; color: var(--ink); margin-top: 4px; direction: ltr; }
+  .time-box .sub { font-size: .85rem; color: var(--muted); margin-top: 2px; direction: ltr; }
+
+  .shabbat-card {
+    border: 2px solid var(--gold);
+    background: linear-gradient(180deg, #fffbeb, #ffffff);
+  }
+  .shabbat-card .parsha { color: var(--gold); }
+  .shabbat-card .time-box { background: var(--gold-soft); max-width: 220px; }
+  .shabbat-card .time-box .label { color: var(--gold); }
 
   .note {
     margin-top: 16px;
@@ -118,6 +129,29 @@
   }
   .nav button:active { background: var(--accent-soft); }
 
+  .zmanim-list {
+    margin-top: 14px;
+    border-top: 1px solid var(--line);
+  }
+  .zmanim-list .zrow {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 7px 4px;
+    border-bottom: 1px solid var(--line);
+    font-size: .95rem;
+  }
+  .zmanim-list .zrow:last-child { border-bottom: none; }
+  .zmanim-list .zname { color: var(--ink); }
+  .zmanim-list .zval { direction: ltr; font-variant-numeric: tabular-nums; font-weight: 700; }
+  .zmanim-list .zrow.key { background: var(--accent-soft); border-radius: 8px; }
+  .src-note {
+    margin-top: 12px;
+    font-size: .8rem;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.6;
+  }
 
   .install-btn {
     display: block;
@@ -171,12 +205,19 @@
 </head>
 <body>
 <header>
-  <h1>זמני מנחה וערבית — תשפ״ז</h1>
-  <p>עשהאל · זמני ימי החול לפי הלוח המודפס</p>
+  <h1>זמני תפילה — עשהאל · תשפ״ז</h1>
+  <p>מנחה וערבית · זמני היום · כניסת וצאת שבת</p>
 </header>
 <main>
   <div class="today-line" id="todayLine"></div>
   <div id="noticeArea"></div>
+
+  <div class="card shabbat-card" id="shabbatCard" hidden>
+    <div class="parsha" id="shabbatTitle"></div>
+    <div class="heb-date" id="shabbatHeb"></div>
+    <div class="times" id="shabbatTimes"></div>
+  </div>
+
   <div class="card">
     <div class="parsha" id="parsha"></div>
     <div class="heb-date" id="hebDate"></div>
@@ -184,6 +225,20 @@
     <div class="times" id="times"></div>
     <div class="note">הזמנים לימי החול (ראשון–חמישי) כפי שמופיעים בלוח</div>
   </div>
+
+  <div class="card" id="zmanimCard">
+    <div class="parsha">זמני היום</div>
+    <div class="heb-date" id="zmanimDate"></div>
+    <div class="times" id="zmanimMain"></div>
+    <div class="zmanim-list" id="zmanimList"></div>
+    <div class="src-note">הזמנים מלוח הרב שמואל אריאל לעשהאל, תשפ״ז. הלוח נוסח בשעון חורף לאורך כל השנה; האתר מציג בשעון השור — בשעון קיץ נוספה שעה לכל הזמנים.</div>
+    <div class="nav">
+      <button id="dayPrevBtn" type="button">‹ יום קודם</button>
+      <button id="dayTodayBtn" type="button">היום</button>
+      <button id="dayNextBtn" type="button">יום הבא ›</button>
+    </div>
+  </div>
+
   <button id="installBtn" class="install-btn" type="button" hidden>הוספה למסך הבית ⤵</button>
   <div id="iosHint" class="ios-hint" hidden>באייפון: לוחצים על כפתור השיתוף (ריבוע עם חץ למעלה) בסרגל של ספארי, גוללים ובוחרים «הוסף למסך הבית».</div>
   <div class="nav">
@@ -200,11 +255,22 @@
       <tbody></tbody>
     </table>
   </div>
+  <h2 class="full-title">זמני שבת — הדלקת נרות וצאת השבת</h2>
+  <div class="table-wrap">
+    <table id="shabbatTable">
+      <thead>
+        <tr><th>שבת / חג</th><th>תאריך עברי</th><th>תאריך לועזי</th><th>הדלקת נרות</th><th>צאת השבת</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
   <footer>
-    הועתק מהלוח המודפס של שנת תשפ״ז · הערה בלוח: הלוח מתחשב בשעון קיץ<br>
-    טווח הלוח: 15.09.2026 – 23.09.2027
+    מנחה וערבית: הועתקו מהלוח המודפס של שנת תשפ״ז · הערה בלוח: הלוח מתחשב בשעון קיץ · טווח הלוח: 15.09.2026 – 23.09.2027<br>
+    זמני היום והדלקת נרות / צאת שבת: מהלוחות של הרב שמואל אריאל לעשהאל, כפי שנשלחו לקבוצת היישוב ב־20.09.2026<br>
+    הערה מהשולחים: בלוח אחר שהמועצה פרסמה נפל שיבוש בזמני הזריחה והשקיעה החל משבת אחרי מות; הלוח המוטמע כאן הוא לוח הרב שמואל אריאל ונבדק מול טבלת זמני השבת לכל אורך השנה
   </footer>
 </main>
+<script src="zmanim-data.js"></script>
 <script>
 // rows: parsha, hebrew date range, gregorian label as printed, start/end ISO (year resolved: Sep-Dec 2026, Jan-Sep 2027), mincha, maariv (null = blank in source), maariv2
 const ROWS = [
@@ -282,8 +348,18 @@ function fmtHuman(iso) {
   const d = new Date(iso + "T12:00:00Z");
   return new Intl.DateTimeFormat("he-IL", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(d);
 }
+function weekday(iso) { return new Date(iso + "T12:00:00Z").getUTCDay(); } // 0=Sun ... 6=Sat
+function fmtGregShort(iso) {
+  const d = new Date(iso + "T12:00:00Z");
+  return new Intl.DateTimeFormat("he-IL", { timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric" }).format(d);
+}
 
-let viewIso = isoToday();
+const realToday = isoToday();
+const urlDate = new URLSearchParams(location.search).get("date");
+const todayIso = (urlDate && /^\d{4}-\d{2}-\d{2}$/.test(urlDate)) ? urlDate : realToday;
+
+let viewIso = todayIso;
+let dayIso = todayIso;
 
 function findRow(iso) {
   for (let i = 0; i < ROWS.length; i++) {
@@ -298,8 +374,83 @@ function nextRow(iso) {
   return null;
 }
 
+function timeBox(label, value, sub) {
+  const div = document.createElement("div");
+  div.className = "time-box";
+  div.innerHTML = '<div class="label"></div><div class="value"></div>' + (sub ? '<div class="sub"></div>' : '');
+  div.querySelector(".label").textContent = label;
+  div.querySelector(".value").textContent = value;
+  if (sub) div.querySelector(".sub").textContent = sub;
+  return div;
+}
+
+// ---------- Shabbat / chag card ----------
+function shabbatEntry(iso) {
+  return (window.SHABBAT || []).find(s => s.d === iso) || null;
+}
+function renderShabbat() {
+  const card = document.getElementById("shabbatCard");
+  const title = document.getElementById("shabbatTitle");
+  const heb = document.getElementById("shabbatHeb");
+  const times = document.getElementById("shabbatTimes");
+  card.hidden = true;
+  times.innerHTML = "";
+  const todayE = shabbatEntry(todayIso);
+  const nextE = shabbatEntry(shiftIso(todayIso, 1));
+  if (todayE && todayE.t) {
+    const isSat = weekday(todayE.d) === 6;
+    title.textContent = isSat ? "צאת שבת — " + todayE.p : "צאת " + todayE.p;
+    heb.textContent = todayE.h + " · " + fmtGregShort(todayE.d);
+    times.appendChild(timeBox(isSat ? "צאת השבת" : "צאת " + todayE.p, todayE.t));
+    card.hidden = false;
+  } else if (nextE) {
+    const isSat = weekday(nextE.d) === 6;
+    title.textContent = isSat ? "שבת " + nextE.p : nextE.p;
+    heb.textContent = nextE.h + " · " + fmtGregShort(nextE.d);
+    if (nextE.c) times.appendChild(timeBox("הדלקת נרות", nextE.c));
+    if (nextE.t) times.appendChild(timeBox(isSat ? "צאת השבת" : "צאת " + nextE.p, nextE.t));
+    if (times.children.length) card.hidden = false;
+  }
+}
+
+// ---------- Daily zmanim card ----------
+const KEY_ROWS = new Set(["הנץ החמה (בגובה)", "שקיעה (בגובה)", "סוף זמן ק״ש (גר״א)", "חצות היום", "צאת הכוכבים (13.5 דק׳)"]);
+function renderZmanim() {
+  const d = (window.ZMANIM_DAYS || {})[dayIso];
+  const dateEl = document.getElementById("zmanimDate");
+  const main = document.getElementById("zmanimMain");
+  const list = document.getElementById("zmanimList");
+  main.innerHTML = "";
+  list.innerHTML = "";
+  if (!d) {
+    dateEl.textContent = fmtHuman(dayIso);
+    list.innerHTML = '<div class="zrow"><span class="zname">אין זמנים לתאריך זה בלוח (הלוח מכסה א׳ תשרי – כ״ט אלול תשפ״ז)</span></div>';
+    return;
+  }
+  dateEl.textContent = d.h + " תשפ״ז · " + fmtHuman(dayIso);
+  const get = i => d.t[i];
+  main.appendChild(timeBox("הנץ החמה", get(3), "במישור " + get(4)));
+  main.appendChild(timeBox("שקיעה", get(16), "במישור " + get(15)));
+  main.appendChild(timeBox("צאת הכוכבים", get(17), "ר״ת " + get(20)));
+  window.ZMANIM_COLS.forEach((name, i) => {
+    const row = document.createElement("div");
+    row.className = "zrow" + (KEY_ROWS.has(name) ? " key" : "");
+    const n = document.createElement("span");
+    n.className = "zname";
+    n.textContent = name;
+    const v = document.createElement("span");
+    v.className = "zval";
+    v.textContent = d.t[i] || "—";
+    row.appendChild(n);
+    row.appendChild(v);
+    list.appendChild(row);
+  });
+}
+
+// ---------- Weekly mincha/maariv ----------
 function render() {
-  document.getElementById("todayLine").textContent = "היום: " + fmtHuman(isoToday());
+  const tl = document.getElementById("todayLine");
+  tl.textContent = (urlDate ? "תצוגה לתאריך: " : "היום: ") + fmtHuman(todayIso);
   const notice = document.getElementById("noticeArea");
   notice.innerHTML = "";
   let found = findRow(viewIso);
@@ -328,12 +479,7 @@ function render() {
     const boxes = [["מנחה", r[5]], ["ערבית", r[6]], ["ערבית ב׳", r[7]]];
     for (const [label, val] of boxes) {
       if (!val) continue;
-      const div = document.createElement("div");
-      div.className = "time-box";
-      div.innerHTML = '<div class="label"></div><div class="value"></div>';
-      div.querySelector(".label").textContent = label;
-      div.querySelector(".value").textContent = val;
-      times.appendChild(div);
+      times.appendChild(timeBox(label, val));
     }
   } else {
     document.getElementById("parsha").textContent = "—";
@@ -360,6 +506,23 @@ function renderTable(currentIdx) {
     tbody.appendChild(tr);
   });
 }
+
+function renderShabbatTable() {
+  const tbody = document.querySelector("#shabbatTable tbody");
+  tbody.innerHTML = "";
+  (window.SHABBAT || []).forEach(s => {
+    const tr = document.createElement("tr");
+    if (s.d === todayIso || s.d === shiftIso(todayIso, 1)) tr.className = "current";
+    [s.p, s.h, fmtGregShort(s.d), s.c || "—", s.t || "—"].forEach((c, j) => {
+      const td = document.createElement("td");
+      td.textContent = c;
+      if (j >= 2) td.className = "t";
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
 let deferredPrompt = null;
 const installBtn = document.getElementById("installBtn");
 const iosHint = document.getElementById("iosHint");
@@ -391,9 +554,15 @@ if ("serviceWorker" in navigator) {
 
 document.getElementById("prevBtn").addEventListener("click", () => { viewIso = shiftIso(viewIso, -7); render(); });
 document.getElementById("nextBtn").addEventListener("click", () => { viewIso = shiftIso(viewIso, 7); render(); });
-document.getElementById("todayBtn").addEventListener("click", () => { viewIso = isoToday(); render(); });
+document.getElementById("todayBtn").addEventListener("click", () => { viewIso = todayIso; render(); });
+document.getElementById("dayPrevBtn").addEventListener("click", () => { dayIso = shiftIso(dayIso, -1); renderZmanim(); });
+document.getElementById("dayNextBtn").addEventListener("click", () => { dayIso = shiftIso(dayIso, 1); renderZmanim(); });
+document.getElementById("dayTodayBtn").addEventListener("click", () => { dayIso = todayIso; renderZmanim(); });
 
 render();
+renderShabbat();
+renderZmanim();
+renderShabbatTable();
 </script>
 </body>
 </html>

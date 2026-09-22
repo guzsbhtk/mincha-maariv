@@ -265,7 +265,7 @@
   <div class="table-wrap">
     <table id="unifiedTable">
       <thead>
-        <tr><th>תאריך</th><th>יום</th><th>תאריך עברי</th><th>פרשה / חג</th><th>מנחה</th><th>ערבית</th><th>ערבית ב׳</th><th>הדלקת נרות</th><th>צאת שבת / חג</th><th>הנץ</th><th>שקיעה</th><th>צאת הכוכבים</th></tr>
+        <tr><th>תאריך</th><th>יום</th><th>תאריך עברי</th><th>פרשה / חג</th><th>מנחה</th><th>ערבית</th><th>ערבית ב׳</th><th>הדלקת נרות</th><th>צאת שבת / חג</th><th>הנץ במישור</th><th>שקיעה</th><th>צאת הכוכבים</th></tr>
       </thead>
       <tbody></tbody>
     </table>
@@ -420,7 +420,7 @@ function renderShabbat() {
 }
 
 // ---------- Daily zmanim card ----------
-const KEY_ROWS = new Set(["הנץ החמה (בגובה)", "שקיעה (בגובה)", "סוף זמן ק״ש (גר״א)", "חצות היום", "צאת הכוכבים (13.5 דק׳)"]);
+const KEY_ROWS = new Set(["הנץ החמה (במישור)", "שקיעה (בגובה)", "סוף זמן ק״ש (גר״א)", "חצות היום", "צאת הכוכבים (13.5 דק׳)"]);
 function renderZmanim() {
   const d = (window.ZMANIM_DAYS || {})[viewIso];
   const dateEl = document.getElementById("zmanimDate");
@@ -440,7 +440,7 @@ function renderZmanim() {
   toggle.hidden = false;
   dateEl.textContent = d.h + " תשפ״ז · " + fmtHuman(viewIso);
   const get = i => d.t[i];
-  main.appendChild(timeBox("הנץ החמה", get(3), "במישור " + get(4)));
+  main.appendChild(timeBox("הנץ החמה", get(4), "בגובה " + get(3)));
   main.appendChild(timeBox("שקיעה", get(16), "במישור " + get(15)));
   main.appendChild(timeBox("צאת הכוכבים", get(17), "ר״ת " + get(20)));
   window.ZMANIM_COLS.forEach((name, i) => {
@@ -527,7 +527,7 @@ function renderUnifiedTable() {
       (wk && wk.exact && wk.row[7]) || "—",
       (eNext && eNext.c) || "—",
       (eHere && eHere.t) || "—",
-      t[3], t[16], t[17]
+      t[4], t[16], t[17]
     ];
     const tr = document.createElement("tr");
     if (d === viewIso) tr.className = "current";

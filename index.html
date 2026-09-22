@@ -153,6 +153,23 @@
     line-height: 1.6;
   }
 
+  .nav-top { margin: 0 0 14px; }
+  .toggle-btn {
+    display: block;
+    width: 100%;
+    margin-top: 12px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--accent);
+    font-size: .95rem;
+    font-weight: 600;
+    padding: 10px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .toggle-btn:active { background: var(--accent-soft); }
+
   .install-btn {
     display: block;
     width: 100%;
@@ -210,6 +227,11 @@
 </header>
 <main>
   <div class="today-line" id="todayLine"></div>
+  <div class="nav nav-top" role="group" aria-label="בחירת תאריך">
+    <button id="prevDayBtn" type="button" aria-label="יום קודם">‹ יום קודם</button>
+    <button id="todayBtn" type="button">היום</button>
+    <button id="nextDayBtn" type="button" aria-label="יום הבא">יום הבא ›</button>
+  </div>
   <div id="noticeArea"></div>
 
   <div class="card shabbat-card" id="shabbatCard" hidden>
@@ -218,7 +240,7 @@
     <div class="times" id="shabbatTimes"></div>
   </div>
 
-  <div class="card">
+  <div class="card" id="minchaCard">
     <div class="parsha" id="parsha"></div>
     <div class="heb-date" id="hebDate"></div>
     <div class="greg-range" id="gregRange"></div>
@@ -231,21 +253,12 @@
     <div class="heb-date" id="zmanimDate"></div>
     <div class="times" id="zmanimMain"></div>
     <div class="zmanim-list" id="zmanimList"></div>
-    <div class="src-note">הזמנים מלוח הרב שמואל אריאל לעשהאל, תשפ״ז. הלוח נוסח בשעון חורף לאורך כל השנה; האתר מציג בשעון השור — בשעון קיץ נוספה שעה לכל הזמנים.</div>
-    <div class="nav">
-      <button id="dayPrevBtn" type="button">‹ יום קודם</button>
-      <button id="dayTodayBtn" type="button">היום</button>
-      <button id="dayNextBtn" type="button">יום הבא ›</button>
-    </div>
+    <button id="zmanimToggle" class="toggle-btn" type="button" aria-expanded="false">כל זמני היום ▾</button>
+    <div class="src-note">הזמנים מלוח הרב שמואל אריאל לעשהאל, תשפ״ז. קובץ הזמנים בנוי לפי שעון חורף לאורך כל השנה; בתקופת שעון הקיץ נוספה שעה לזמנים שבקובץ.</div>
   </div>
 
   <button id="installBtn" class="install-btn" type="button" hidden>הוספה למסך הבית ⤵</button>
   <div id="iosHint" class="ios-hint" hidden>באייפון: לוחצים על כפתור השיתוף (ריבוע עם חץ למעלה) בסרגל של ספארי, גוללים ובוחרים «הוסף למסך הבית».</div>
-  <div class="nav">
-    <button id="prevBtn" type="button">‹ שבוע קודם</button>
-    <button id="todayBtn" type="button">היום</button>
-    <button id="nextBtn" type="button">שבוע הבא ›</button>
-  </div>
   <h2 class="full-title">הלוח המלא — שנת תשפ״ז</h2>
   <div class="table-wrap">
     <table id="fullTable">
@@ -359,7 +372,7 @@ const urlDate = new URLSearchParams(location.search).get("date");
 const todayIso = (urlDate && /^\d{4}-\d{2}-\d{2}$/.test(urlDate)) ? urlDate : realToday;
 
 let viewIso = todayIso;
-let dayIso = todayIso;
+let zmanimExpanded = false;
 
 function findRow(iso) {
   for (let i = 0; i < ROWS.length; i++) {
@@ -395,8 +408,8 @@ function renderShabbat() {
   const times = document.getElementById("shabbatTimes");
   card.hidden = true;
   times.innerHTML = "";
-  const todayE = shabbatEntry(todayIso);
-  const nextE = shabbatEntry(shiftIso(todayIso, 1));
+  const todayE = shabbatEntry(viewIso);
+  const nextE = shabbatEntry(shiftIso(viewIso, 1));
   if (todayE && todayE.t) {
     const isSat = weekday(todayE.d) === 6;
     title.textContent = isSat ? "צאת שבת — " + todayE.p : "צאת " + todayE.p;
@@ -416,23 +429,29 @@ function renderShabbat() {
 // ---------- Daily zmanim card ----------
 const KEY_ROWS = new Set(["הנץ החמה (בגובה)", "שקיעה (בגובה)", "סוף זמן ק״ש (גר״א)", "חצות היום", "צאת הכוכבים (13.5 דק׳)"]);
 function renderZmanim() {
-  const d = (window.ZMANIM_DAYS || {})[dayIso];
+  const d = (window.ZMANIM_DAYS || {})[viewIso];
   const dateEl = document.getElementById("zmanimDate");
   const main = document.getElementById("zmanimMain");
   const list = document.getElementById("zmanimList");
+  const toggle = document.getElementById("zmanimToggle");
   main.innerHTML = "";
   list.innerHTML = "";
+  toggle.setAttribute("aria-expanded", zmanimExpanded ? "true" : "false");
+  toggle.textContent = zmanimExpanded ? "הסתר את שאר הזמנים ▴" : "כל זמני היום ▾";
   if (!d) {
-    dateEl.textContent = fmtHuman(dayIso);
+    dateEl.textContent = fmtHuman(viewIso);
     list.innerHTML = '<div class="zrow"><span class="zname">אין זמנים לתאריך זה בלוח (הלוח מכסה א׳ תשרי – כ״ט אלול תשפ״ז)</span></div>';
+    toggle.hidden = true;
     return;
   }
-  dateEl.textContent = d.h + " תשפ״ז · " + fmtHuman(dayIso);
+  toggle.hidden = false;
+  dateEl.textContent = d.h + " תשפ״ז · " + fmtHuman(viewIso);
   const get = i => d.t[i];
   main.appendChild(timeBox("הנץ החמה", get(3), "במישור " + get(4)));
   main.appendChild(timeBox("שקיעה", get(16), "במישור " + get(15)));
   main.appendChild(timeBox("צאת הכוכבים", get(17), "ר״ת " + get(20)));
   window.ZMANIM_COLS.forEach((name, i) => {
+    if (!zmanimExpanded && !KEY_ROWS.has(name)) return;
     const row = document.createElement("div");
     row.className = "zrow" + (KEY_ROWS.has(name) ? " key" : "");
     const n = document.createElement("span");
@@ -450,7 +469,7 @@ function renderZmanim() {
 // ---------- Weekly mincha/maariv ----------
 function render() {
   const tl = document.getElementById("todayLine");
-  tl.textContent = (urlDate ? "תצוגה לתאריך: " : "היום: ") + fmtHuman(todayIso);
+  tl.textContent = (viewIso === realToday ? "היום: " : "תצוגה לתאריך: ") + fmtHuman(viewIso);
   const notice = document.getElementById("noticeArea");
   notice.innerHTML = "";
   let found = findRow(viewIso);
@@ -552,16 +571,17 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
 }
 
-document.getElementById("prevBtn").addEventListener("click", () => { viewIso = shiftIso(viewIso, -7); render(); });
-document.getElementById("nextBtn").addEventListener("click", () => { viewIso = shiftIso(viewIso, 7); render(); });
-document.getElementById("todayBtn").addEventListener("click", () => { viewIso = todayIso; render(); });
-document.getElementById("dayPrevBtn").addEventListener("click", () => { dayIso = shiftIso(dayIso, -1); renderZmanim(); });
-document.getElementById("dayNextBtn").addEventListener("click", () => { dayIso = shiftIso(dayIso, 1); renderZmanim(); });
-document.getElementById("dayTodayBtn").addEventListener("click", () => { dayIso = todayIso; renderZmanim(); });
+function renderAll() {
+  render();
+  renderShabbat();
+  renderZmanim();
+}
+document.getElementById("prevDayBtn").addEventListener("click", () => { viewIso = shiftIso(viewIso, -1); renderAll(); });
+document.getElementById("nextDayBtn").addEventListener("click", () => { viewIso = shiftIso(viewIso, 1); renderAll(); });
+document.getElementById("todayBtn").addEventListener("click", () => { viewIso = realToday; renderAll(); });
+document.getElementById("zmanimToggle").addEventListener("click", () => { zmanimExpanded = !zmanimExpanded; renderZmanim(); });
 
-render();
-renderShabbat();
-renderZmanim();
+renderAll();
 renderShabbatTable();
 </script>
 </body>

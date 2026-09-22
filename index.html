@@ -206,6 +206,8 @@
   table { width: 100%; border-collapse: collapse; font-size: .85rem; }
   th, td { padding: 8px 6px; text-align: center; border-bottom: 1px solid var(--line); white-space: nowrap; }
   th { background: #f8f6f1; color: var(--muted); font-weight: 600; position: sticky; top: 0; }
+  th:first-child, td:first-child { position: sticky; right: 0; background: var(--card); }
+  thead th:first-child { background: #f8f6f1; z-index: 1; }
   td.t { direction: ltr; font-variant-numeric: tabular-nums; }
   tr.current { background: var(--accent-soft); font-weight: 700; }
   tr:last-child td { border-bottom: none; }
@@ -259,20 +261,11 @@
 
   <button id="installBtn" class="install-btn" type="button" hidden>הוספה למסך הבית ⤵</button>
   <div id="iosHint" class="ios-hint" hidden>באייפון: לוחצים על כפתור השיתוף (ריבוע עם חץ למעלה) בסרגל של ספארי, גוללים ובוחרים «הוסף למסך הבית».</div>
-  <h2 class="full-title">הלוח המלא — שנת תשפ״ז</h2>
+  <h2 class="full-title">הלוח המלא — כל הזמנים לפי תאריך</h2>
   <div class="table-wrap">
-    <table id="fullTable">
+    <table id="unifiedTable">
       <thead>
-        <tr><th>פרשה</th><th>תאריך עברי</th><th>תאריך לועזי</th><th>מנחה</th><th>ערבית</th><th>ערבית ב׳</th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-  <h2 class="full-title">זמני שבת — הדלקת נרות וצאת השבת</h2>
-  <div class="table-wrap">
-    <table id="shabbatTable">
-      <thead>
-        <tr><th>שבת / חג</th><th>תאריך עברי</th><th>תאריך לועזי</th><th>הדלקת נרות</th><th>צאת השבת</th></tr>
+        <tr><th>תאריך</th><th>יום</th><th>תאריך עברי</th><th>פרשה / חג</th><th>מנחה</th><th>ערבית</th><th>ערבית ב׳</th><th>הדלקת נרות</th><th>צאת שבת / חג</th><th>הנץ</th><th>שקיעה</th><th>צאת הכוכבים</th></tr>
       </thead>
       <tbody></tbody>
     </table>
@@ -506,40 +499,50 @@ function render() {
     document.getElementById("gregRange").textContent = "";
     document.getElementById("times").innerHTML = "";
   }
-  renderTable(shown ? shown.idx : -1);
+  highlightUnified();
 }
 
-function renderTable(currentIdx) {
-  const tbody = document.querySelector("#fullTable tbody");
+const WD_NAMES = ["יום ראשון", "יום שני", "יום שלישי", "יום רביעי", "יום חמישי", "יום שישי", "שבת"];
+const UNIFIED_TRS = {};
+function renderUnifiedTable() {
+  const tbody = document.querySelector("#unifiedTable tbody");
   tbody.innerHTML = "";
-  ROWS.forEach((r, i) => {
+  const days = window.ZMANIM_DAYS || {};
+  const byDate = {};
+  (window.SHABBAT || []).forEach(s => { byDate[s.d] = s; });
+  Object.keys(days).sort().forEach(d => {
+    const wd = weekday(d);
+    const wk = findRow(d);
+    const eHere = byDate[d] || null;
+    const eNext = byDate[shiftIso(d, 1)] || null;
+    let context = "";
+    if (eHere) context = eHere.p;
+    else if (eNext) context = "ערב " + eNext.p;
+    else if (wk && wk.exact) context = wk.row[0];
+    const t = days[d].t;
+    const cells = [
+      fmtGregShort(d), WD_NAMES[wd], days[d].h, context,
+      (wk && wk.exact && wk.row[5]) || "—",
+      (wk && wk.exact && wk.row[6]) || "—",
+      (wk && wk.exact && wk.row[7]) || "—",
+      (eNext && eNext.c) || "—",
+      (eHere && eHere.t) || "—",
+      t[3], t[16], t[17]
+    ];
     const tr = document.createElement("tr");
-    if (i === currentIdx) tr.className = "current";
-    const cells = [r[0], r[1], r[2], r[5], r[6] || "—", r[7]];
+    if (d === viewIso) tr.className = "current";
+    UNIFIED_TRS[d] = tr;
     cells.forEach((c, j) => {
       const td = document.createElement("td");
       td.textContent = c;
-      if (j >= 2) td.className = "t";
+      if (j === 0 || j >= 4) td.className = "t";
       tr.appendChild(td);
     });
     tbody.appendChild(tr);
   });
 }
-
-function renderShabbatTable() {
-  const tbody = document.querySelector("#shabbatTable tbody");
-  tbody.innerHTML = "";
-  (window.SHABBAT || []).forEach(s => {
-    const tr = document.createElement("tr");
-    if (s.d === todayIso || s.d === shiftIso(todayIso, 1)) tr.className = "current";
-    [s.p, s.h, fmtGregShort(s.d), s.c || "—", s.t || "—"].forEach((c, j) => {
-      const td = document.createElement("td");
-      td.textContent = c;
-      if (j >= 2) td.className = "t";
-      tr.appendChild(td);
-    });
-    tbody.appendChild(tr);
-  });
+function highlightUnified() {
+  Object.keys(UNIFIED_TRS).forEach(d => { UNIFIED_TRS[d].className = (d === viewIso) ? "current" : ""; });
 }
 
 let deferredPrompt = null;
@@ -581,8 +584,8 @@ document.getElementById("nextDayBtn").addEventListener("click", () => { viewIso 
 document.getElementById("todayBtn").addEventListener("click", () => { viewIso = realToday; renderAll(); });
 document.getElementById("zmanimToggle").addEventListener("click", () => { zmanimExpanded = !zmanimExpanded; renderZmanim(); });
 
+renderUnifiedTable();
 renderAll();
-renderShabbatTable();
 </script>
 </body>
 </html>

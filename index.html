@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1e40af">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="זמני תפילה">
+<title>זמני מנחה וערבית — תשפ״ז</title>
+<style>
+  :root {
+    --bg: #f4f1ea;
+    --card: #ffffff;
+    --ink: #1f2937;
+    --muted: #6b7280;
+    --accent: #1e40af;
+    --accent-soft: #dbeafe;
+    --gold: #b45309;
+    --line: #e5e1d8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding-bottom: 48px;
+  }
+  header {
+    background: linear-gradient(135deg, #1e3a8a, #1e40af);
+    color: #fff;
+    text-align: center;
+    padding: 28px 16px 22px;
+  }
+  header h1 { font-size: 1.5rem; font-weight: 700; }
+  header p { margin-top: 6px; font-size: .95rem; opacity: .85; }
+  main { max-width: 560px; margin: 0 auto; padding: 20px 16px; }
+
+  .today-line {
+    text-align: center;
+    color: var(--muted);
+    font-size: .95rem;
+    margin-bottom: 14px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 22px 18px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.05);
+  }
+  .parsha {
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .heb-date { text-align: center; color: var(--muted); margin-top: 4px; font-size: .95rem; }
+  .greg-range { text-align: center; color: var(--muted); margin-top: 2px; font-size: .9rem; }
+
+  .times {
+    display: flex;
+    gap: 12px;
+    margin-top: 18px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .time-box {
+    flex: 1 1 0;
+    min-width: 110px;
+    max-width: 160px;
+    background: var(--accent-soft);
+    border-radius: 14px;
+    padding: 14px 8px;
+    text-align: center;
+  }
+  .time-box .label { font-size: .95rem; color: var(--accent); font-weight: 600; }
+  .time-box .value { font-size: 1.7rem; font-weight: 800; color: var(--ink); margin-top: 4px; direction: ltr; }
+
+  .note {
+    margin-top: 16px;
+    text-align: center;
+    font-size: .85rem;
+    color: var(--muted);
+  }
+  .notice {
+    background: #fef3c7;
+    border: 1px solid #f59e0b55;
+    color: #92400e;
+    border-radius: 12px;
+    padding: 12px 14px;
+    text-align: center;
+    font-size: .95rem;
+    margin-bottom: 14px;
+  }
+
+  .nav {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .nav button {
+    flex: 1;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--accent);
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .nav button:active { background: var(--accent-soft); }
+
+
+  .install-btn {
+    display: block;
+    width: 100%;
+    margin-top: 14px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    padding: 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .install-btn:active { background: #1e3a8a; }
+  .ios-hint {
+    margin-top: 10px;
+    background: var(--accent-soft);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: .9rem;
+    color: var(--ink);
+    text-align: center;
+    line-height: 1.7;
+  }
+  h2.full-title {
+    margin: 28px 0 10px;
+    font-size: 1.1rem;
+    text-align: center;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--line); background: var(--card); }
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  th, td { padding: 8px 6px; text-align: center; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { background: #f8f6f1; color: var(--muted); font-weight: 600; position: sticky; top: 0; }
+  td.t { direction: ltr; font-variant-numeric: tabular-nums; }
+  tr.current { background: var(--accent-soft); font-weight: 700; }
+  tr:last-child td { border-bottom: none; }
+
+  footer {
+    margin-top: 26px;
+    text-align: center;
+    color: var(--muted);
+    font-size: .8rem;
+    line-height: 1.6;
+    padding: 0 16px;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>זמני מנחה וערבית — תשפ״ז</h1>
+  <p>עשהאל · זמני ימי החול לפי הלוח המודפס</p>
+</header>
+<main>
+  <div class="today-line" id="todayLine"></div>
+  <div id="noticeArea"></div>
+  <div class="card">
+    <div class="parsha" id="parsha"></div>
+    <div class="heb-date" id="hebDate"></div>
+    <div class="greg-range" id="gregRange"></div>
+    <div class="times" id="times"></div>
+    <div class="note">הזמנים לימי החול (ראשון–חמישי) כפי שמופיעים בלוח</div>
+  </div>
+  <button id="installBtn" class="install-btn" type="button" hidden>הוספה למסך הבית ⤵</button>
+  <div id="iosHint" class="ios-hint" hidden>באייפון: לוחצים על כפתור השיתוף (ריבוע עם חץ למעלה) בסרגל של ספארי, גוללים ובוחרים «הוסף למסך הבית».</div>
+  <div class="nav">
+    <button id="prevBtn" type="button">‹ שבוע קודם</button>
+    <button id="todayBtn" type="button">היום</button>
+    <button id="nextBtn" type="button">שבוע הבא ›</button>
+  </div>
+  <h2 class="full-title">הלוח המלא — שנת תשפ״ז</h2>
+  <div class="table-wrap">
+    <table id="fullTable">
+      <thead>
+        <tr><th>פרשה</th><th>תאריך עברי</th><th>תאריך לועזי</th><th>מנחה</th><th>ערבית</th><th>ערבית ב׳</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <footer>
+    הועתק מהלוח המודפס של שנת תשפ״ז · הערה בלוח: הלוח מתחשב בשעון קיץ<br>
+    טווח הלוח: 15.09.2026 – 23.09.2027
+  </footer>
+</main>
+<script>
+// rows: parsha, hebrew date range, gregorian label as printed, start/end ISO (year resolved: Sep-Dec 2026, Jan-Sep 2027), mincha, maariv (null = blank in source), maariv2
+const ROWS = [
+  ["האזינו — שבת תשובה", "ד׳ — ו׳ בתשרי", "15-17.09", "2026-09-15", "2026-09-17", "18:30", "19:10", "20:00"],
+  ["א סוכות", "י״א — י״ג בתשרי", "22-24.09", "2026-09-22", "2026-09-24", "18:20", "19:00", "20:00"],
+  ["חוה״מ סוכות", "ט״ז — כ׳ בתשרי", "27.09-01.10", "2026-09-27", "2026-10-01", "18:15", "18:50", "20:00"],
+  ["בראשית", "כ״ג — כ״ז בתשרי", "04-08.10", "2026-10-04", "2026-10-08", "18:05", "18:45", "20:00"],
+  ["נח", "ל׳ בתשרי — ד׳ מרחשוון", "11-15.10", "2026-10-11", "2026-10-15", "17:55", "18:35", "20:00"],
+  ["לך לך", "ז׳ — י״א במרחשוון", "18-22.10", "2026-10-18", "2026-10-22", "17:50", "18:25", "20:00"],
+  ["וירא", "י״ד — י״ח במרחשוון", "25-29.10", "2026-10-25", "2026-10-29", "16:40", "17:20", "20:00"],
+  ["חי שרה", "כ״א — כ״ה במרחשוון", "1-5.11", "2026-11-01", "2026-11-05", "16:35", "17:10", "20:00"],
+  ["תולדות", "כ״ח במרחשוון — ב׳ כסלו", "8-12.11", "2026-11-08", "2026-11-12", "16:30", "17:10", "20:00"],
+  ["ויצא", "ה׳ — ט׳ בכסלו", "15-19.11", "2026-11-15", "2026-11-19", "16:30", "17:05", "20:00"],
+  ["וישלח", "י״ב — ט״ז בכסלו", "22-26.11", "2026-11-22", "2026-11-26", "16:25", "17:00", "20:00"],
+  ["וישב", "י״ט — כ״ג בכסלו", "29.11-03.12", "2026-11-29", "2026-12-03", "16:20", "17:00", "20:00"],
+  ["מקץ — חנוכה", "כ״ו — ל׳ בכסלו", "06-10.12", "2026-12-06", "2026-12-10", "16:20", "17:00", "20:00"],
+  ["ויגש", "ג׳ — ז׳ בטבת", "13-17.12", "2026-12-13", "2026-12-17", "16:25", "17:05", "20:00"],
+  ["ויחי", "י״א — י״ד בטבת", "21-24.12", "2026-12-21", "2026-12-24", "16:30", "17:05", "20:00"],
+  ["שמות", "י״ח — כ״א בטבת", "27-31.12", "2026-12-27", "2026-12-31", "16:35", "17:10", "20:00"],
+  ["וארא", "כ״ד — כ״ח בטבת", "03-07.01", "2027-01-03", "2027-01-07", "16:40", "17:15", "20:00"],
+  ["בא", "ב׳ — ו׳ בשבט", "10-14.01", "2027-01-10", "2027-01-14", "16:45", "17:20", "20:00"],
+  ["בשלח", "ט׳ — י״ג בשבט", "17-21.01", "2027-01-17", "2027-01-21", "16:50", "17:30", "20:00"],
+  ["יתרו", "ט״ז — כ׳ בשבט", "24-28.01", "2027-01-24", "2027-01-28", "16:55", "17:35", "20:00"],
+  ["משפטים", "כ״ג — כ״ז בשבט", "31.01-04.02", "2027-01-31", "2027-02-04", "17:00", "17:40", "20:00"],
+  ["תרומה", "ל׳ שבט — ד׳ באדר א׳", "07-11.02", "2027-02-07", "2027-02-11", "17:10", "17:45", "20:00"],
+  ["תצוה", "ז׳ — י״א באדר א׳", "14-18.02", "2027-02-14", "2027-02-18", "17:15", "17:50", "20:00"],
+  ["כי תשא", "י״ד — י״ח באדר א׳", "21-25.02", "2027-02-21", "2027-02-25", "17:15", "17:55", "20:00"],
+  ["ויקהל — שקלים", "כ״א — כ״ה באדר א׳", "28.02-04.03", "2027-02-28", "2027-03-04", "17:25", "18:00", "20:00"],
+  ["פקודי", "כ״ח באדר א׳ — ב׳ באדר ב׳", "07-11.03", "2027-03-07", "2027-03-11", "17:30", "18:05", "20:00"],
+  ["ויקרא — זכור", "ה׳ — ט׳ באדר ב׳", "14-18.03", "2027-03-14", "2027-03-18", "17:35", "18:10", "20:00"],
+  ["צו — פרה", "י״ב — ט״ז באדר ב׳", "21-25.03", "2027-03-21", "2027-03-25", "17:40", "18:15", "20:00"],
+  ["שמיני — החודש", "י״ט — כ״ג באדר ב׳", "28.03-01.04", "2027-03-28", "2027-04-01", "18:45", "19:20", "20:00"],
+  ["תזריע", "כ״ו באדר ב׳ — א׳ בניסן", "04-08.04", "2027-04-04", "2027-04-08", "18:50", "19:25", "20:00"],
+  ["מצורע — שבת הגדול", "ד׳ — ח׳ בניסן", "11-15.04", "2027-04-11", "2027-04-15", "18:55", "19:30", "20:00"],
+  ["פסח", "י״א — י״ג בניסן", "18-20.04", "2027-04-18", "2027-04-20", "19:00", "19:35", "20:00"],
+  ["חוה״מ פסח", "י״ח — כ״ב בניסן", "25-29.04", "2027-04-25", "2027-04-29", "19:05", "19:40", "20:00"],
+  ["קדושים", "כ״ה — כ״ט בניסן", "02-06.05", "2027-05-02", "2027-05-06", "19:10", "19:45", "20:00"],
+  ["אמור", "ב׳ — ו׳ באייר", "09-13.05", "2027-05-09", "2027-05-13", "19:15", "19:50", "20:00"],
+  ["בהר", "ט׳ — י״ג באייר", "16-20.05", "2027-05-16", "2027-05-20", "19:20", null, "20:00"],
+  ["בחוקותי", "ט״ז — כ׳ באייר", "23-27.05", "2027-05-23", "2027-05-27", "19:25", null, "20:00"],
+  ["במדבר", "כ״ג — כ״ז באייר", "30.05-03.06", "2027-05-30", "2027-06-03", "19:25", null, "20:00"],
+  ["שבועות", "א׳ — ה׳ בסיון", "06-09.06", "2027-06-06", "2027-06-09", "19:30", null, "20:15"],
+  ["בהעלותך", "ח׳ — י״ב בסיון", "13-17.06", "2027-06-13", "2027-06-17", "19:35", null, "20:15"],
+  ["שלח", "ט״ו — י״ט בסיון", "20-24.06", "2027-06-20", "2027-06-24", "19:35", null, "20:15"],
+  ["קרח", "כ״ב — כ״ו בסיון", "27.06-01.07", "2027-06-27", "2027-07-01", "19:35", null, "20:15"],
+  ["חוקת", "כ״ט בסיון — ג׳ בתמוז", "04-08.07", "2027-07-04", "2027-07-08", "19:35", null, "20:15"],
+  ["בלק", "ו׳ — י׳ בתמוז", "11-15.07", "2027-07-11", "2027-07-15", "19:35", null, "20:15"],
+  ["פינחס", "י״ג — ט״ז בתמוז", "18-21.07", "2027-07-18", "2027-07-21", "19:30", null, "20:15"],
+  ["מטות מסעי", "כ׳ — כ״ד בתמוז", "25-29.07", "2027-07-25", "2027-07-29", "19:25", null, "20:15"],
+  ["דברים — חזון", "כ״ז תמוז — ב׳ במנחם אב", "01-05.08", "2027-08-01", "2027-08-05", "19:20", null, "20:15"],
+  ["ואתחנן", "ה׳ — ט׳ במנחם אב", "08-10.08", "2027-08-08", "2027-08-10", "19:15", null, "20:00"],
+  ["עקב", "י״ב — ט״ז במנחם אב", "15-19.08", "2027-08-15", "2027-08-19", "19:10", "19:45", "20:00"],
+  ["ראה", "י״ט — כ״ג במנחם אב", "22-26.08", "2027-08-22", "2027-08-26", "19:00", "19:35", "20:00"],
+  ["שופטים", "כ״ו — ל׳ במנחם אב", "29.08-02.09", "2027-08-29", "2027-09-02", "18:50", "19:30", "20:00"],
+  ["כי תצא", "ג׳ — ז׳ באלול", "05-09.09", "2027-09-05", "2027-09-09", "18:40", "19:20", "20:00"],
+  ["כי תבוא", "י׳ — י״ד באלול", "12-16.09", "2027-09-12", "2027-09-16", "18:35", "19:10", "20:00"],
+  ["נצבים וילך", "י״ז — כ״א באלול", "19-23.09", "2027-09-19", "2027-09-23", "18:25", "19:05", "20:00"]
+];
+
+const FIRST = ROWS[0][3], LAST = ROWS[ROWS.length - 1][4];
+const TZ = "Asia/Jerusalem";
+
+function isoToday() {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
+  const p = {};
+  for (const x of parts) p[x.type] = x.value;
+  return p.year + "-" + p.month + "-" + p.day;
+}
+function shiftIso(iso, days) {
+  const d = new Date(iso + "T12:00:00Z");
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+function fmtHuman(iso) {
+  const d = new Date(iso + "T12:00:00Z");
+  return new Intl.DateTimeFormat("he-IL", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(d);
+}
+
+let viewIso = isoToday();
+
+function findRow(iso) {
+  for (let i = 0; i < ROWS.length; i++) {
+    if (iso >= ROWS[i][3] && iso <= ROWS[i][4]) return { row: ROWS[i], idx: i, exact: true };
+  }
+  return null;
+}
+function nextRow(iso) {
+  for (let i = 0; i < ROWS.length; i++) {
+    if (ROWS[i][3] > iso) return { row: ROWS[i], idx: i, exact: false };
+  }
+  return null;
+}
+
+function render() {
+  document.getElementById("todayLine").textContent = "היום: " + fmtHuman(isoToday());
+  const notice = document.getElementById("noticeArea");
+  notice.innerHTML = "";
+  let found = findRow(viewIso);
+  let shown = found;
+  if (!found) {
+    if (viewIso < FIRST) {
+      notice.innerHTML = '<div class="notice">התאריך הנבחר לפני תחילת הלוח. הלוח מתחיל ב־15.09.2026. מוצג השבוע הראשון:</div>';
+      shown = { row: ROWS[0], idx: 0, exact: false };
+    } else if (viewIso > LAST) {
+      notice.innerHTML = '<div class="notice">התאריך הנבחר אחרי סיום הלוח. הלוח מסתיים ב־23.09.2027 (כ״א באלול תשפ״ז).</div>';
+    } else {
+      const nx = nextRow(viewIso);
+      if (nx) {
+        notice.innerHTML = '<div class="notice">אין בלוח זמנים לתאריך זה (סוף שבוע או פער בלוח). מוצגים הזמנים הבאים, החל מ־' + fmtHuman(nx.row[3]) + ':</div>';
+        shown = nx;
+      }
+    }
+  }
+  if (shown) {
+    const r = shown.row;
+    document.getElementById("parsha").textContent = r[0];
+    document.getElementById("hebDate").textContent = r[1];
+    document.getElementById("gregRange").textContent = r[2];
+    const times = document.getElementById("times");
+    times.innerHTML = "";
+    const boxes = [["מנחה", r[5]], ["ערבית", r[6]], ["ערבית ב׳", r[7]]];
+    for (const [label, val] of boxes) {
+      if (!val) continue;
+      const div = document.createElement("div");
+      div.className = "time-box";
+      div.innerHTML = '<div class="label"></div><div class="value"></div>';
+      div.querySelector(".label").textContent = label;
+      div.querySelector(".value").textContent = val;
+      times.appendChild(div);
+    }
+  } else {
+    document.getElementById("parsha").textContent = "—";
+    document.getElementById("hebDate").textContent = "";
+    document.getElementById("gregRange").textContent = "";
+    document.getElementById("times").innerHTML = "";
+  }
+  renderTable(shown ? shown.idx : -1);
+}
+
+function renderTable(currentIdx) {
+  const tbody = document.querySelector("#fullTable tbody");
+  tbody.innerHTML = "";
+  ROWS.forEach((r, i) => {
+    const tr = document.createElement("tr");
+    if (i === currentIdx) tr.className = "current";
+    const cells = [r[0], r[1], r[2], r[5], r[6] || "—", r[7]];
+    cells.forEach((c, j) => {
+      const td = document.createElement("td");
+      td.textContent = c;
+      if (j >= 2) td.className = "t";
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+let deferredPrompt = null;
+const installBtn = document.getElementById("installBtn");
+const iosHint = document.getElementById("iosHint");
+const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+if (!isStandalone) {
+  if (isIos) {
+    installBtn.hidden = false;
+    installBtn.addEventListener("click", () => { iosHint.hidden = !iosHint.hidden; });
+  } else {
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.hidden = false;
+    });
+    installBtn.addEventListener("click", async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      installBtn.hidden = true;
+    });
+  }
+}
+window.addEventListener("appinstalled", () => { installBtn.hidden = true; iosHint.hidden = true; });
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+}
+
+document.getElementById("prevBtn").addEventListener("click", () => { viewIso = shiftIso(viewIso, -7); render(); });
+document.getElementById("nextBtn").addEventListener("click", () => { viewIso = shiftIso(viewIso, 7); render(); });
+document.getElementById("todayBtn").addEventListener("click", () => { viewIso = isoToday(); render(); });
+
+render();
+</script>
+</body>
+</html>

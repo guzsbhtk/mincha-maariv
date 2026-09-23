@@ -472,7 +472,7 @@ function renderTreats() {
 }
 
 // ---------- Daily zmanim card ----------
-const KEY_ROWS = new Set(["הנץ החמה (במישור)", "שקיעה (בגובה)", "סוף זמן ק״ש (גר״א)", "חצות היום", "צאת הכוכבים (13.5 דק׳)"]);
+const KEY_ROWS = new Set(["הנץ החמה (במישור)", "שקיעה (בגובה)", "סוף זמן ק״ש (גר״א)", "חצות היום", "צאת הכוכבים (16.875 דק׳)"]);
 function renderZmanim() {
   const d = (window.ZMANIM_DAYS || {})[viewIso];
   const dateEl = document.getElementById("zmanimDate");
@@ -494,7 +494,7 @@ function renderZmanim() {
   const get = i => d.t[i];
   main.appendChild(timeBox("הנץ החמה", get(4)));
   main.appendChild(timeBox("שקיעה", get(16), "במישור " + get(15)));
-  main.appendChild(timeBox("צאת הכוכבים", get(17), "ר״ת " + get(20)));
+  main.appendChild(timeBox("צאת הכוכבים", get(18), "ר״ת " + get(20)));
   window.ZMANIM_COLS.forEach((name, i) => {
     if (!zmanimExpanded && !KEY_ROWS.has(name)) return;
     const row = document.createElement("div");
@@ -579,7 +579,7 @@ function renderUnifiedTable() {
       (wk && wk.exact && wk.row[7]) || "—",
       (eNext && eNext.c) || "—",
       (eHere && eHere.t) || "—",
-      t[4], t[16], t[17]
+      t[4], t[16], t[18]
     ];
     const tr = document.createElement("tr");
     if (d === viewIso) tr.className = "current";

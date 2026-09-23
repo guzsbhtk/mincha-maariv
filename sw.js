@@ -1,4 +1,4 @@
-const CACHE = "tefilot-tshpz-v9";
+const CACHE = "tefilot-tshpz-v10";
 const ASSETS = ["./", "./index.html", "./zmanim-data.js", "./kids-treats.js", "./manifest.json", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));

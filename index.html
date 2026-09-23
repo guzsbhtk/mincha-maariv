@@ -102,7 +102,7 @@
   }
   .treats .label { font-size: .95rem; color: var(--gold); font-weight: 600; }
   .treats .family { font-size: 1.25rem; font-weight: 800; color: var(--ink); margin-top: 2px; }
-  .treats.empty .family { font-size: 1rem; font-weight: 600; color: var(--muted); }
+  .treats-week { text-align: center; font-size: .85rem; font-weight: 600; color: var(--gold); margin: 6px 0 2px; }
   #unifiedTable .treats-cell { display: block; font-size: .8em; color: var(--gold); margin-top: 2px; }
 
   .note {
@@ -246,6 +246,7 @@
     <button id="todayBtn" type="button">היום</button>
     <button id="nextDayBtn" type="button" aria-label="יום הבא">יום הבא ›</button>
   </div>
+  <div class="treats-week" id="weekTreats" hidden></div>
   <div id="noticeArea"></div>
 
   <div class="card shabbat-card" id="shabbatCard" hidden>
@@ -446,19 +447,27 @@ function treatsFamily(satIso) {
 function renderTreats() {
   const box = document.getElementById("shabbatTreats");
   const fam = document.getElementById("shabbatTreatsFamily");
+  const week = document.getElementById("weekTreats");
   const wd = weekday(viewIso);
-  const sat = wd === 6 ? viewIso : (wd === 5 ? shiftIso(viewIso, 1) : null);
+  const sat = shiftIso(viewIso, 6 - wd); // השבת הקרובה (או היום, בשבת עצמה)
   box.hidden = true;
-  if (!sat) return;
+  week.hidden = true;
   const name = treatsFamily(sat);
-  fam.textContent = name || "טרם עודכן";
-  box.classList.toggle("empty", !name);
-  box.hidden = false;
-  const card = document.getElementById("shabbatCard");
-  if (card.hidden) {
-    const title = document.getElementById("shabbatTitle");
-    if (!title.textContent) title.textContent = "שבת";
-    card.hidden = false;
+  if (!name) return; // אין משפחה רשומה לשבת הזו - לא מציגים כלום
+  if (wd === 5 || wd === 6) {
+    // שישי ושבת: תצוגה גדולה בכרטיס השבת
+    fam.textContent = name;
+    box.hidden = false;
+    const card = document.getElementById("shabbatCard");
+    if (card.hidden) {
+      const title = document.getElementById("shabbatTitle");
+      if (!title.textContent) title.textContent = "שבת";
+      card.hidden = false;
+    }
+  } else {
+    // ראשון-חמישי: שורה קטנה עם המשפחה של השבת הקרובה
+    week.textContent = "🍬 הפתעות לתפילת ילדים בשבת הקרובה: " + name;
+    week.hidden = false;
   }
 }
 

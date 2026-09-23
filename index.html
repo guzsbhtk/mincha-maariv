@@ -92,6 +92,18 @@
   .shabbat-card .parsha { color: var(--gold); }
   .shabbat-card .time-box { background: var(--gold-soft); max-width: 220px; }
   .shabbat-card .time-box .label { color: var(--gold); }
+  .treats {
+    margin: 14px auto 0;
+    max-width: 320px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px dashed var(--gold);
+    text-align: center;
+  }
+  .treats .label { font-size: .95rem; color: var(--gold); font-weight: 600; }
+  .treats .family { font-size: 1.25rem; font-weight: 800; color: var(--ink); margin-top: 2px; }
+  .treats.empty .family { font-size: 1rem; font-weight: 600; color: var(--muted); }
+  #unifiedTable .treats-cell { display: block; font-size: .8em; color: var(--gold); margin-top: 2px; }
 
   .note {
     margin-top: 16px;
@@ -240,6 +252,10 @@
     <div class="parsha" id="shabbatTitle"></div>
     <div class="heb-date" id="shabbatHeb"></div>
     <div class="times" id="shabbatTimes"></div>
+    <div class="treats" id="shabbatTreats" hidden>
+      <div class="label">🍬 הפתעות לתפילת ילדים</div>
+      <div class="family" id="shabbatTreatsFamily"></div>
+    </div>
   </div>
 
   <div class="card" id="minchaCard">
@@ -272,11 +288,13 @@
   </div>
   <footer>
     מנחה וערבית: הועתקו מהלוח המודפס של שנת תשפ״ז · הערה בלוח: הלוח מתחשב בשעון קיץ · טווח הלוח: 15.09.2026 – 23.09.2027<br>
+    הפתעות לתפילת ילדים בשבת: מתעדכן ידנית<br>
     זמני היום והדלקת נרות / צאת שבת: מהלוחות של הרב שמואל אריאל לעשהאל, כפי שנשלחו לקבוצת היישוב ב־20.09.2026<br>
     הערה מהשולחים: בלוח אחר שהמועצה פרסמה נפל שיבוש בזמני הזריחה והשקיעה החל משבת אחרי מות; הלוח המוטמע כאן הוא לוח הרב שמואל אריאל ונבדק מול טבלת זמני השבת לכל אורך השנה
   </footer>
 </main>
 <script src="zmanim-data.js"></script>
+<script src="kids-treats.js"></script>
 <script>
 // rows: parsha, hebrew date range, gregorian label as printed, start/end ISO (year resolved: Sep-Dec 2026, Jan-Sep 2027), mincha, maariv (null = blank in source), maariv2
 const ROWS = [
@@ -417,6 +435,31 @@ function renderShabbat() {
     if (nextE.t) times.appendChild(timeBox(isSat ? "צאת השבת" : "צאת " + nextE.p, nextE.t));
     if (times.children.length) card.hidden = false;
   }
+  renderTreats();
+}
+// ---------- Kids' prayer treats (kids-treats.js, updated by hand) ----------
+function treatsFamily(satIso) {
+  const m = window.KIDS_TREATS || {};
+  const v = m[satIso];
+  return (typeof v === "string" && v.trim()) ? v.trim() : "";
+}
+function renderTreats() {
+  const box = document.getElementById("shabbatTreats");
+  const fam = document.getElementById("shabbatTreatsFamily");
+  const wd = weekday(viewIso);
+  const sat = wd === 6 ? viewIso : (wd === 5 ? shiftIso(viewIso, 1) : null);
+  box.hidden = true;
+  if (!sat) return;
+  const name = treatsFamily(sat);
+  fam.textContent = name || "טרם עודכן";
+  box.classList.toggle("empty", !name);
+  box.hidden = false;
+  const card = document.getElementById("shabbatCard");
+  if (card.hidden) {
+    const title = document.getElementById("shabbatTitle");
+    if (!title.textContent) title.textContent = "שבת";
+    card.hidden = false;
+  }
 }
 
 // ---------- Daily zmanim card ----------
@@ -535,6 +578,12 @@ function renderUnifiedTable() {
     cells.forEach((c, j) => {
       const td = document.createElement("td");
       td.textContent = c;
+      if (j === 3 && wd === 6 && treatsFamily(d)) {
+        const sp = document.createElement("span");
+        sp.className = "treats-cell";
+        sp.textContent = "הפתעות: " + treatsFamily(d);
+        td.appendChild(sp);
+      }
       if (j === 0 || j >= 4) td.className = "t";
       tr.appendChild(td);
     });

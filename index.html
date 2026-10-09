@@ -503,7 +503,7 @@ function renderZmanim() {
   toggle.hidden = false;
   dateEl.textContent = d.h + " תשפ״ז · " + fmtHuman(viewIso);
   const get = i => d.t[i];
-  main.appendChild(timeBox("הנץ החמה", get(3), get(4) ? "במישור " + get(4) : ""));
+  main.appendChild(timeBox("הנץ החמה", get(4), get(3) ? "בגובה " + get(3) : ""));
   main.appendChild(timeBox("שקיעה", get(16), "במישור " + get(15)));
   main.appendChild(timeBox("צאת הכוכבים", get(18), "ר״ת " + get(20)));
   window.ZMANIM_COLS.forEach((name, i) => {

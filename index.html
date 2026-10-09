@@ -223,6 +223,7 @@
   thead th:first-child { background: #f8f6f1; z-index: 3; }
   .table-jump { display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
   .table-jump input, .table-jump button { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
+  .table-jump input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
   .table-jump button { color: var(--accent); font-weight: 600; cursor: pointer; }
   td.t { direction: ltr; font-variant-numeric: tabular-nums; }
   tr.current { background: var(--accent-soft); font-weight: 700; }
@@ -283,6 +284,7 @@
   <button id="installBtn" class="install-btn" type="button" hidden>הוספה למסך הבית ⤵</button>
   <div id="iosHint" class="ios-hint" hidden>באייפון: לוחצים על כפתור השיתוף (ריבוע עם חץ למעלה) בסרגל של ספארי, גוללים ובוחרים «הוסף למסך הבית».</div>
   <h2 class="full-title">הלוח המלא — כל הזמנים לפי תאריך</h2>
+  <label class="table-jump"><input type="checkbox" id="allTableZmanim"> הצג את כל זמני היום בטבלה</label>
   <form class="table-jump" id="tableJumpForm">
     <label for="tableJumpDate">קפיצה לתאריך:</label>
     <input type="date" id="tableJumpDate" required>
@@ -501,7 +503,7 @@ function renderZmanim() {
   toggle.hidden = false;
   dateEl.textContent = d.h + " תשפ״ז · " + fmtHuman(viewIso);
   const get = i => d.t[i];
-  main.appendChild(timeBox("הנץ החמה", get(4), "במישור"));
+  main.appendChild(timeBox("הנץ החמה", get(3), get(4) ? "במישור " + get(4) : ""));
   main.appendChild(timeBox("שקיעה", get(16), "במישור " + get(15)));
   main.appendChild(timeBox("צאת הכוכבים", get(18), "ר״ת " + get(20)));
   window.ZMANIM_COLS.forEach((name, i) => {
@@ -567,9 +569,25 @@ function render() {
 
 const WD_NAMES = ["יום ראשון", "יום שני", "יום שלישי", "יום רביעי", "יום חמישי", "יום שישי", "שבת"];
 const UNIFIED_TRS = {};
+let allTableZmanim = false;
+try { allTableZmanim = localStorage.getItem("allTableZmanim") === "true"; } catch (_) {}
+function tableZmanimColumns() {
+  return allTableZmanim ? window.ZMANIM_COLS.map((_, i) => i) : [4, 7, 11, 16, 18];
+}
 function renderUnifiedTable() {
   const tbody = document.querySelector("#unifiedTable tbody");
   tbody.innerHTML = "";
+  Object.keys(UNIFIED_TRS).forEach(d => delete UNIFIED_TRS[d]);
+  const columns = tableZmanimColumns();
+  const headers = ["תאריך", "יום", "תאריך עברי", "פרשה / חג", "מנחה", "ערבית", "ערבית ב׳", "הדלקת נרות", "צאת שבת / חג"];
+  const headRow = document.querySelector("#unifiedTable thead tr");
+  headRow.innerHTML = "";
+  headers.concat(columns.map(i => window.ZMANIM_COLS[i])).forEach(name => {
+    const th = document.createElement("th");
+    th.scope = "col";
+    th.textContent = name;
+    headRow.appendChild(th);
+  });
   const days = window.ZMANIM_DAYS || {};
   const byDate = {};
   (window.SHABBAT || []).forEach(s => { byDate[s.d] = s; });
@@ -590,7 +608,7 @@ function renderUnifiedTable() {
       (wk && wk.exact && wk.row[7]) || "—",
       (eNext && eNext.c) || "—",
       (eHere && eHere.t) || "—",
-      t[4], t[16], t[18]
+      ...columns.map(i => t[i] || "—")
     ];
     const tr = document.createElement("tr");
     if (d === viewIso) tr.className = "current";
@@ -614,6 +632,13 @@ function highlightUnified() {
   Object.keys(UNIFIED_TRS).forEach(d => { UNIFIED_TRS[d].className = (d === viewIso) ? "current" : ""; });
 }
 
+const allTableCheckbox = document.getElementById("allTableZmanim");
+allTableCheckbox.checked = allTableZmanim;
+allTableCheckbox.addEventListener("change", () => {
+  allTableZmanim = allTableCheckbox.checked;
+  try { localStorage.setItem("allTableZmanim", String(allTableZmanim)); } catch (_) {}
+  renderUnifiedTable();
+});
 const tableJumpDate = document.getElementById("tableJumpDate");
 const tableDates = Object.keys(window.ZMANIM_DAYS || {}).sort();
 tableJumpDate.min = tableDates[0] || "";

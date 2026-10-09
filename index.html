@@ -214,12 +214,16 @@
     color: var(--muted);
     font-weight: 600;
   }
-  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--line); background: var(--card); }
+  .table-wrap { overflow: auto; max-height: 65vh; border-radius: 12px; border: 1px solid var(--line); background: var(--card); }
   table { width: 100%; border-collapse: collapse; font-size: .85rem; }
   th, td { padding: 8px 6px; text-align: center; border-bottom: 1px solid var(--line); white-space: nowrap; }
-  th { background: #f8f6f1; color: var(--muted); font-weight: 600; position: sticky; top: 0; }
+  th { background: #f8f6f1; color: var(--muted); font-weight: 600; position: sticky; top: 0; z-index: 2; }
   th:first-child, td:first-child { position: sticky; right: 0; background: var(--card); }
-  thead th:first-child { background: #f8f6f1; z-index: 1; }
+  tbody td:first-child { z-index: 1; }
+  thead th:first-child { background: #f8f6f1; z-index: 3; }
+  .table-jump { display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+  .table-jump input, .table-jump button { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
+  .table-jump button { color: var(--accent); font-weight: 600; cursor: pointer; }
   td.t { direction: ltr; font-variant-numeric: tabular-nums; }
   tr.current { background: var(--accent-soft); font-weight: 700; }
   tr:last-child td { border-bottom: none; }
@@ -279,7 +283,12 @@
   <button id="installBtn" class="install-btn" type="button" hidden>הוספה למסך הבית ⤵</button>
   <div id="iosHint" class="ios-hint" hidden>באייפון: לוחצים על כפתור השיתוף (ריבוע עם חץ למעלה) בסרגל של ספארי, גוללים ובוחרים «הוסף למסך הבית».</div>
   <h2 class="full-title">הלוח המלא — כל הזמנים לפי תאריך</h2>
-  <div class="table-wrap">
+  <form class="table-jump" id="tableJumpForm">
+    <label for="tableJumpDate">קפיצה לתאריך:</label>
+    <input type="date" id="tableJumpDate" required>
+    <button type="submit">קפוץ לתאריך</button>
+  </form>
+  <div class="table-wrap" tabindex="0" aria-label="הלוח המלא, גלילה לאורך ולרוחב">
     <table id="unifiedTable">
       <thead>
         <tr><th>תאריך</th><th>יום</th><th>תאריך עברי</th><th>פרשה / חג</th><th>מנחה</th><th>ערבית</th><th>ערבית ב׳</th><th>הדלקת נרות</th><th>צאת שבת / חג</th><th>הנץ במישור</th><th>שקיעה</th><th>צאת הכוכבים</th></tr>
@@ -492,7 +501,7 @@ function renderZmanim() {
   toggle.hidden = false;
   dateEl.textContent = d.h + " תשפ״ז · " + fmtHuman(viewIso);
   const get = i => d.t[i];
-  main.appendChild(timeBox("הנץ החמה", get(4)));
+  main.appendChild(timeBox("הנץ החמה", get(4), "במישור"));
   main.appendChild(timeBox("שקיעה", get(16), "במישור " + get(15)));
   main.appendChild(timeBox("צאת הכוכבים", get(18), "ר״ת " + get(20)));
   window.ZMANIM_COLS.forEach((name, i) => {
@@ -603,6 +612,22 @@ function highlightUnified() {
   Object.keys(UNIFIED_TRS).forEach(d => { UNIFIED_TRS[d].className = (d === viewIso) ? "current" : ""; });
 }
 
+const tableJumpDate = document.getElementById("tableJumpDate");
+const tableDates = Object.keys(window.ZMANIM_DAYS || {}).sort();
+tableJumpDate.min = tableDates[0] || "";
+tableJumpDate.max = tableDates[tableDates.length - 1] || "";
+document.getElementById("tableJumpForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const selected = tableJumpDate.value;
+  const row = UNIFIED_TRS[selected];
+  if (!row) return;
+  viewIso = selected;
+  renderAll();
+  const wrap = document.querySelector(".table-wrap");
+  const header = document.querySelector("#unifiedTable thead");
+  wrap.scrollTop += row.getBoundingClientRect().top - wrap.getBoundingClientRect().top - header.getBoundingClientRect().height - 1;
+});
+
 let deferredPrompt = null;
 const installBtn = document.getElementById("installBtn");
 const iosHint = document.getElementById("iosHint");
@@ -633,6 +658,7 @@ if ("serviceWorker" in navigator) {
 }
 
 function renderAll() {
+  tableJumpDate.value = viewIso;
   render();
   renderShabbat();
   renderZmanim();

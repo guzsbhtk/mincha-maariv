@@ -528,6 +528,8 @@ function render() {
   notice.innerHTML = "";
   let found = findRow(viewIso);
   let shown = found;
+  const noWeekdayPrayer = weekday(viewIso) === 5 || weekday(viewIso) === 6 || !!shabbatEntry(viewIso);
+  document.getElementById("minchaCard").hidden = noWeekdayPrayer && !found;
   if (!found) {
     if (viewIso < FIRST) {
       notice.innerHTML = '<div class="notice">התאריך הנבחר לפני תחילת הלוח. הלוח מתחיל ב־15.09.2026. מוצג השבוע הראשון:</div>';
@@ -537,7 +539,7 @@ function render() {
     } else {
       const nx = nextRow(viewIso);
       if (nx) {
-        notice.innerHTML = '<div class="notice">אין בלוח זמנים למנחה וערבית ביום הזה.</div>';
+        if (!noWeekdayPrayer) notice.innerHTML = '<div class="notice">אין בלוח זמנים למנחה וערבית ביום הזה.</div>';
         shown = nx;
       }
     }

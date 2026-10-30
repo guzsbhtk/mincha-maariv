@@ -9,7 +9,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="זמני תפילה">
+<meta name="apple-mobile-web-app-title" content="זמני תפילה עשהאל">
 <title>זמני תפילה — עשהאל · תשפ״ז</title>
 <style>
   :root {
@@ -269,7 +269,7 @@
     <div class="heb-date" id="hebDate"></div>
     <div class="greg-range" id="gregRange"></div>
     <div class="times" id="times"></div>
-    <div class="note">הזמנים לימי החול (ראשון–חמישי) כפי שמופיעים בלוח</div>
+    <div class="note" id="minchaNote">הזמנים לימי החול (ראשון–חמישי) כפי שמופיעים בלוח</div>
   </div>
 
   <div class="card" id="zmanimCard">
@@ -522,6 +522,25 @@ function renderZmanim() {
   });
 }
 
+// ---------- Friday mincha on Shabbat eve (winter clock only) ----------
+// מנחה ביום שישי בערב שבת, רק בשעון חורף וכשיום שישי יום חול רגיל: מנחה א׳ 12:25, מנחה ב׳ 7 דקות אחרי כניסת שבת.
+// שעון חורף תשפ״ז: מ־25.10.2026 עד המעבר לשעון קיץ ביום שישי 26.03.2027 ב־02:00 (ערב שבת האחרון בשעון חורף: 19.03.2027).
+const WINTER_FRIDAY_START = "2026-10-25";
+const WINTER_FRIDAY_END = "2027-03-26"; // לא כולל — כבר שעון קיץ
+function addMinutes(hhmm, mins) {
+  const parts = hhmm.split(":").map(Number);
+  const total = parts[0] * 60 + parts[1] + mins;
+  return String(Math.floor(total / 60) % 24) + ":" + String(total % 60).padStart(2, "0");
+}
+function fridayMincha(iso) {
+  if (weekday(iso) !== 5) return null;                        // רק יום שישי
+  if (iso < WINTER_FRIDAY_START || iso >= WINTER_FRIDAY_END) return null; // רק עד סוף שעון חורף
+  if (shabbatEntry(iso)) return null;                         // יום שישי שהוא חג — לא יום חול רגיל
+  const shab = shabbatEntry(shiftIso(iso, 1));
+  if (!shab || !shab.c) return null;
+  return { parsha: shab.p, knisat: shab.c, minchaB: addMinutes(shab.c, 7) };
+}
+
 // ---------- Weekly mincha/maariv ----------
 function render() {
   const tl = document.getElementById("todayLine");
@@ -532,6 +551,23 @@ function render() {
   let shown = found;
   const noWeekdayPrayer = weekday(viewIso) === 5 || weekday(viewIso) === 6 || !!shabbatEntry(viewIso);
   document.getElementById("minchaCard").hidden = noWeekdayPrayer && !found;
+  const noteEl = document.getElementById("minchaNote");
+  const friday = fridayMincha(viewIso);
+  if (friday) {
+    document.getElementById("minchaCard").hidden = false;
+    document.getElementById("parsha").textContent = "מנחה — ערב שבת " + friday.parsha;
+    const dF = (window.ZMANIM_DAYS || {})[viewIso];
+    document.getElementById("hebDate").textContent = dF ? dF.h + " תשפ״ז" : "";
+    document.getElementById("gregRange").textContent = fmtGregShort(viewIso);
+    const fridayTimes = document.getElementById("times");
+    fridayTimes.innerHTML = "";
+    fridayTimes.appendChild(timeBox("מנחה א׳", "12:25"));
+    fridayTimes.appendChild(timeBox("מנחה ב׳", friday.minchaB, "כניסת שבת " + friday.knisat + " + 7 דק׳"));
+    noteEl.textContent = "מנחה בערב שבת — בשעון חורף בלבד, כשיום שישי יום חול רגיל";
+    highlightUnified();
+    return;
+  }
+  noteEl.textContent = "הזמנים לימי החול (ראשון–חמישי) כפי שמופיעים בלוח";
   if (!found) {
     if (viewIso < FIRST) {
       notice.innerHTML = '<div class="notice">התאריך הנבחר לפני תחילת הלוח. הלוח מתחיל ב־15.09.2026. מוצג השבוע הראשון:</div>';
